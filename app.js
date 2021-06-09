@@ -1,124 +1,162 @@
-module.exports = resolverPostfija = (linea = '') => {
-    let operacion = [], pila = [], output = '', output_array = []
-    const operadores = {
-        ')': { valor: null, simbolo: ')' },
-        '(': { valor: null, simbolo: '(' },
-        '^': { valor: 3, funcion: (a, b) => (Math.pow((a * 1), (b * 1))), simbolo: '^' },
-        '/': { valor: 2, funcion: (a, b) => ((1 * a) / (b * 1)), simbolo: '/' },
-        '*': { valor: 2, funcion: (a, b) => ((1 * a) * (b * 1)), simbolo: '*' },
-        '-': { valor: 1, funcion: (a, b) => ((1 * a) - (b * 1)), simbolo: '-' },
-        '+': { valor: 1, funcion: (a, b) => ((1 * a) + (b * 1)), simbolo: '+' },
+const resolverPostfija = (inputUser = '') => {
+  const outputArray = [];
+  const operadores = {
+    ')': { valor: null, simbolo: ')' },
+    '(': { valor: null, simbolo: '(' },
+    '^': { valor: 3, funcion: (a, b) => (a * 1) ** (b * 1), simbolo: '^' },
+    '/': { valor: 2, funcion: (a, b) => (1 * a) / (b * 1), simbolo: '/' },
+    '*': { valor: 2, funcion: (a, b) => 1 * a * (b * 1), simbolo: '*' },
+    '-': { valor: 1, funcion: (a, b) => 1 * a - b * 1, simbolo: '-' },
+    '+': { valor: 1, funcion: (a, b) => 1 * a + b * 1, simbolo: '+' },
+    '=': { valor: 0.5, simbolo: '=' },
+  };
+  const alfabeto = {
+    a: true,
+    b: true,
+    c: true,
+    d: true,
+    e: true,
+    f: true,
+    g: true,
+    h: true,
+    i: true,
+    j: true,
+    k: true,
+    l: true,
+    m: true,
+    n: true,
+    ñ: true,
+    o: true,
+    p: true,
+    q: true,
+    r: true,
+    s: true,
+    t: true,
+    u: true,
+    v: true,
+    w: true,
+    x: true,
+    y: true,
+    z: true,
+    '.': true,
+  };
+
+  const isaLetter = (letra = '') => alfabeto[letra.toLowerCase()];
+
+  // Metodos para revisar caracter por carac
+  const isCorrectChar = (c) => operadores[c] || !isNaN(c) || isaLetter(c);
+
+  const isCorrectInput = (input = '') => {
+    for (const char in input) {
+      if (!isCorrectChar(input[char])) return false;
     }
-    const alfabeto = {
-        'a': true, 'b': true, 'c': true,
-        'd': true, 'e': true, 'f': true,
-        'g': true, 'h': true, 'i': true,
-        'j': true, 'k': true, 'l': true,
-        'm': true, 'n': true, 'ñ': true,
-        'o': true, 'p': true, 'q': true,
-        'r': true, 's': true, 't': true,
-        'u': true, 'v': true, 'w': true,
-        'x': true, 'y': true, 'z': true,
-        '.': true,
+    return true;
+  };
+
+  const inputToArray = (input = '') => {
+    const inputTemporal = [];
+    let cifra = '';
+    let operador = '';
+    const caracteresArr = input.split('');
+    while (caracteresArr.length > 0) {
+      if (!isNaN(caracteresArr[0]) || isaLetter(caracteresArr[0])) {
+        cifra += caracteresArr.shift();
+        continue;
+      }
+      operador = caracteresArr.shift();
+      inputTemporal.push(cifra, operador);
+      cifra = '';
+      operador = '';
     }
+    inputTemporal.push(cifra, operador);
+    return inputTemporal.filter((i) => i !== '');
+  };
 
-
-    const isaLetter = (letra = '') => (alfabeto[letra.toLowerCase()] ? true : false)
-
-
-    //Metodos para revisar caracter por carac
-    const revisar_caracter = (c) => (operadores[c] || !isNaN(c) || isaLetter(c)) ? true : false
-    const revisar_linea = (linea = '') => {
-        for (const caracter in linea) {
-            if (!revisar_caracter(linea[caracter])) return false
-        }
-        return true;
+  const vaciarPila = (pila = [], operacion = []) => {
+    while (pila.length > 0) {
+      const antiguoValorPila = pila.shift();
+      operacion.push(antiguoValorPila);
+      outputArray.push(antiguoValorPila.simbolo);
     }
-
-    const armar_input = (linea = "") => {
-        let input_temporal = [], cifra = '', operador = '', caracteres_arr = linea.split('')
-        while (caracteres_arr.length > 0) {
-            if (!isNaN(caracteres_arr[0]) || isaLetter(caracteres_arr[0])) {
-                cifra += caracteres_arr.shift()
-            } else {
-                operador = caracteres_arr.shift()
-                input_temporal.push(cifra, operador)
-                cifra = '', operador = ''
-            }
-
-        }
-        input_temporal.push(cifra, operador)
-        return input_temporal.filter((i) => i != '')
+  };
+  const precedencia = (simboloRevisar, pila, operacion) => {
+    if (pila.length === 0) {
+      pila.unshift(simboloRevisar);
+      return null;
     }
-
-    const vaciar_pila = () => {
-        while (pila.length > 0) {
-            const antigu_valor_pila = pila.shift()
-            operacion.push(antigu_valor_pila)
-            output += antigu_valor_pila.simbolo
-            output_array.push(antigu_valor_pila.simbolo)
-        }
+    if (simboloRevisar.valor == pila[0].valor) {
+      const antiguoValorPila = pila.shift();
+      operacion.push(antiguoValorPila);
+      outputArray.push(antiguoValorPila.simbolo);
+      pila.unshift(simboloRevisar);
+    } else if (simboloRevisar.valor > pila[0].valor) {
+      pila.unshift(simboloRevisar);
+    } else if (simboloRevisar.valor < pila[0].valor) {
+      vaciarPila(pila);
+      pila.unshift(simboloRevisar);
     }
-    const precedencia = (simbolo_revisar, ultimo_simbolo_pila) => {
-        if (pila.length == 0) { pila.unshift(simbolo_revisar); return null }
-        if (simbolo_revisar.valor == ultimo_simbolo_pila.valor) {
-            const antiguo_valor_pila = pila.shift()
-            operacion.push(antiguo_valor_pila)
-            output += antiguo_valor_pila.simbolo
-            output_array.push(antiguo_valor_pila.simbolo)
-            pila.unshift(simbolo_revisar)
-        } else if (simbolo_revisar.valor > ultimo_simbolo_pila.valor) {
-            pila.unshift(simbolo_revisar)
-        } else if (simbolo_revisar.valor < ultimo_simbolo_pila.valor) {
-            vaciar_pila()
-            pila.unshift(simbolo_revisar)
-        }
+    return null;
+  };
+  const llenarPilas = (input) => {
+    const pila = [];
+    const operacion = [];
+    for (const char in input) {
+      const operador = operadores[input[char]];
+      if (!operador) {
+        operacion.push(input[char]);
+        outputArray.push(input[char]);
+        continue;
+      }
+      operador.valor
+        ? precedencia(operador, pila, operacion)
+        : operador.simbolo == ')'
+        ? vaciarPila(pila, operacion)
+        : null;
     }
-    const llenar_pilas = (linea) => {
-        for (let i = 0; i < linea.length; i++) {
-            const element = linea[i], operador = operadores[element];
-            if (!operador) {
-                operacion.push(element)
-                output += element
-                output_array.push(element)
-                continue;
-            }
-            (operador.valor) ? precedencia(operador, pila[0])
-                : (operador.simbolo == ')') ? vaciar_pila() : null
-        }
-        vaciar_pila()
+    vaciarPila(pila, operacion);
+    return operacion;
+  };
+
+  const resolverOperacion = (operacion) => {
+    const arrTmp = [];
+    while (operacion.length > 0) {
+      let resultado = '';
+      while (!isNaN(operacion[0])) arrTmp.unshift(operacion.shift());
+      arrTmp.unshift(operacion.shift());
+      try {
+        resultado = arrTmp[0].funcion(arrTmp[2], arrTmp[1]);
+      } catch (err) {
+        return null;
+      }
+
+      for (let i = 0; i < 3; i++) {
+        arrTmp.shift();
+      }
+      arrTmp.unshift(resultado);
     }
+    return arrTmp[0] * 1;
+  };
 
-    const resolver_operacion = () => {
-        let arrTmp = []
-        while (operacion.length > 0) {
-            while (!isNaN(operacion[0])) arrTmp.unshift(operacion.shift())
-            arrTmp.unshift(operacion.shift())
-            let resultado = ''
-            try { resultado = arrTmp[0].funcion((arrTmp[2]), (arrTmp[1])) }
-            catch (error) { return null }
-
-            for (let i = 0; i < 3; i++) { arrTmp.shift() }
-            arrTmp.unshift(resultado)
-        }
-        return (arrTmp.length == 1) ? (arrTmp[0].toString() * 1) : null
-    }
-
-
-    linea= linea.trim()
-
-    if (!revisar_linea(linea)) return { /*error: true */ input: linea, output, output_array, resultado: null }
-
-    const input = armar_input(linea);
-
-    llenar_pilas(input)
-    const resultado = resolver_operacion()
+  inputUser = inputUser.trim();
+  if (!isCorrectInput(inputUser)) {
     return {
-        // error: (resultado != null) ? false : true,
-        input: linea,
-        output_array,
-        output,
-        resultado,
-    }
-}
+      inputUser,
+      outputString: outputArray.toString(),
+      outputArray,
+      resultado: null,
+    };
+  }
 
+  const inputArray = inputToArray(inputUser);
+  const operacion = llenarPilas(inputArray);
+  const resultado = resolverOperacion(operacion);
+
+  return {
+    inputUser,
+    outputString: outputArray.toString(),
+    outputArray,
+    resultado,
+  };
+};
+
+module.exports = resolverPostfija;
